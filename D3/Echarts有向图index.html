@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECharts 图节点和边点击事件</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+</head>
+<body style="margin: 0">
+    <div id="chart" style="width: 100%; height: 600px;"></div>
+    <script>
+        // 初始化ECharts实例
+        const myChart = echarts.init(document.getElementById('chart'));
+
+        // 图表配置项
+        const option = {
+            title: {
+                text: '有向图点击事件',
+                left: 'center'
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function (params) {
+                    if (params.dataType === 'edge') {
+                        return `${params.data.source} → ${params.data.target}`;
+                    }
+                    return params.data.name;
+                }
+            },
+            series: [
+                {
+                    type: 'graph',
+                    layout: 'force',
+                    roam: true,
+                    label: {
+                        show: true,
+                        position: 'right'
+                    },
+                    edgeSymbol: ['none', 'arrow'],
+                    edgeSymbolSize: [0, 10],
+                    force: {
+                        repulsion: 200,
+                        edgeLength: [50, 200]
+                    },
+                    data: [
+                        { name: '节点A', value: 10, symbolSize: 40 },
+                        { name: '节点B', value: 20, symbolSize: 50 },
+                        { name: '节点C', value: 15, symbolSize: 45 },
+                        { name: '节点D', value: 25, symbolSize: 55 }
+                    ],
+                    links: [
+                        { source: '节点A', target: '节点B' },
+                        { source: '节点B', target: '节点C' },
+                        { source: '节点C', target: '节点D' },
+                        { source: '节点D', target: '节点A' }
+                    ],
+                    lineStyle: {
+                        color: 'source',
+                        width: 2,
+                        curveness: 0.3
+                    }
+                }
+            ]
+        };
+
+        // 设置图表选项
+        myChart.setOption(option);
+
+        // 添加点击事件监听器
+        myChart.on('click', function (params) {
+            if (params.dataType === 'node') {
+                // 节点点击事件
+                console.log('节点被点击：', params.data);
+            } else if (params.dataType === 'edge') {
+                // 边点击事件
+                console.log('边被点击：', params.data);
+            }
+        });
+    </script>
+</body>
+</html>
