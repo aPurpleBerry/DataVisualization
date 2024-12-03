@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Force-Directed Graph with Icons</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    .button-container {
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .button-container button {
+      margin: 5px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="button-container">
+    <button onclick="filterGroup(1)">Group 1</button>
+    <button onclick="filterGroup(2)">Group 2</button>
+    <button onclick="filterGroup(3)">Group 3</button>
+    <button onclick="filterGroup(4)">Group 4</button>
+    <button onclick="resetGraph()">Show All</button>
+  </div>
+  <script>
+    const data = {
+      nodes: [
+        { id: "Myriel", group: 1, icon: "https://via.placeholder.com/32/FF0000/FFFFFF?text=1" },
+        { id: "Napoleon", group: 2, icon: "https://via.placeholder.com/32/0000FF/FFFFFF?text=2" },
+        { id: "Mme.Magloire", group: 1, icon: "https://via.placeholder.com/32/00FF00/FFFFFF?text=3" },
+        { id: "CountessdeLo", group: 3, icon: "https://via.placeholder.com/32/FFFF00/FFFFFF?text=4" },
+        { id: "Geborand", group: 4, icon: "https://via.placeholder.com/32/FF00FF/FFFFFF?text=5" }
+      ],
+      links: [
+        { source: "Napoleon", target: "Myriel", value: 1 },
+        { source: "Mme.Magloire", target: "Myriel", value: 10 },
+        { source: "CountessdeLo", target: "Napoleon", value: 5 },
+        { source: "Geborand", target: "Mme.Magloire", value: 2 }
+      ]
+    };
+
+    const width = 928, height = 600;
+    const svg = d3.select("body")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", [0, 0, width, height])
+      .attr("style", "max-width: 100%; height: auto;");
+
+    const links = data.links.map(d => ({ ...d }));
+    const nodes = data.nodes.map(d => ({ ...d }));
+
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(d => d.id))
+      .force("charge", d3.forceManyBody())
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .on("tick", ticked);
+
+    let link = svg.append("g")
+      .attr("stroke", "#999")
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("stroke-width", d => Math.sqrt(d.value));
+
+    // 使用 image 绘制节点图标
+    let node = svg.append("g")
+      .selectAll("image")
+      .data(nodes)
+      .join("image")
+      .attr("xlink:href", d => d.icon) // 使用节点的 icon 属性
+      .attr("width", 32)
+      .attr("height", 32)
+      .attr("x", -16) // 图标中心点居中
+      .attr("y", -16)
+      .on("click", (event, d) => {
+        console.log("节点被点击:", d);
+      });
+
+    function ticked() {
+      link
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+
+      node
+        .attr("transform", d => `translate(${d.x},${d.y})`);
+    }
+
+    function filterGroup(group) {
+      const filteredNodes = nodes.filter(n => n.group === group);
+      const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
+      const filteredLinks = links.filter(
+        l => filteredNodeIds.has(l.source.id) && filteredNodeIds.has(l.target.id)
+      );
+
+      node = node.data(filteredNodes, d => d.id)
+        .join("image")
+        .attr("xlink:href", d => d.icon)
+        .attr("width", 32)
+        .attr("height", 32)
+        .attr("x", -16)
+        .attr("y", -16)
+        .on("click", (event, d) => {
+          console.log("节点被点击:", d);
+        });
+
+      link = link.data(filteredLinks, d => `${d.source.id}-${d.target.id}`)
+        .join("line")
+        .attr("stroke-width", d => Math.sqrt(d.value));
+
+      simulation.nodes(filteredNodes);
+      simulation.force("link").links(filteredLinks);
+      simulation.alpha(1).restart();
+    }
+
+    function resetGraph() {
+      node = node.data(nodes, d => d.id)
+        .join("image")
+        .attr("xlink:href", d => d.icon)
+        .attr("width", 32)
+        .attr("height", 32)
+        .attr("x", -16)
+        .attr("y", -16)
+        .on("click", (event, d) => {
+          console.log("节点被点击:", d);
+        });
+
+      link = link.data(links, d => `${d.source.id}-${d.target.id}`)
+        .join("line")
+        .attr("stroke-width", d => Math.sqrt(d.value));
+
+      simulation.nodes(nodes);
+      simulation.force("link").links(links);
+      simulation.alpha(1).restart();
+    }
+
+    function dragstarted(event) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      event.subject.fx = event.subject.x;
+      event.subject.fy = event.subject.y;
+    }
+
+    function dragged(event) {
+      event.subject.fx = event.x;
+      event.subject.fy = event.y;
+    }
+
+    function dragended(event) {
+      if (!event.active) simulation.alphaTarget(0);
+      event.subject.fx = null;
+      event.subject.fy = null;
+    }
+  </script>
+</body>
+</html>
