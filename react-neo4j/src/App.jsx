@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Card, Select, Button } from "antd";
 import "./App.css";
+import axios from "axios";
 
 const { Option } = Select;
 
@@ -42,7 +43,7 @@ function App() {
 
     const { nodes, links } = filteredData;
 
-    const width = 840, height = 600;
+    const width = 720, height = 600;
 
     // 清空之前的内容（避免重复渲染）
     d3.select(leftRef.current).selectAll("*").remove();
@@ -91,8 +92,9 @@ function App() {
       .attr("r", 8)
       .attr("fill", (d) => groupColorMapping[d.group]) // 使用 groupColorMapping 根据 group 设置颜色
       .on("click", (event, d) => {
+        fetchData(d)
         setSelectedElement({ type: "node", data: d });
-        console.log("节点被点击:", d);
+        // console.log("节点被点击:", d);
       })
       .call(
         d3
@@ -158,6 +160,40 @@ function App() {
     setFilteredData(graphData);
   };
 
+  /* ****************网络请求******************* */
+  // 网络请求函数，放在组件内部
+  const apiKey = "sk-3cd428d768f64df68ab9422a23a4ec5c";  
+  const baseURL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+
+  const fetchData = async (d) => {
+    try {
+      console.log('我是fetchData 我拿到了节点信息',d);
+      
+      // const response = await axios.get('https://api.example.com/data');
+      // setData(response.data);
+      const response = await axios.post(
+        baseURL,
+        {
+            model: "qwen-plus",  // 模型列表：https://help.aliyun.com/zh/model-studio/getting-started/models
+            messages: [
+                { role: "system", content: "You are a helpful assistant." },
+                { role: "user", content: '简短介绍一下bitcoin' }
+            ]
+        },
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`
+            }
+        }
+      )
+      console.log(response.data.choices[0].message.content);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+
   return (
     <div id="container">
       <div className="left" ref={leftRef}>
@@ -184,25 +220,35 @@ function App() {
           </Button>
         </div>
         <Card
-          title={selectedElement ? `类型: ${selectedElement.type}` : "请选择节点或边"}
-          style={{ width: 280, height: 180, backgroundColor: '#ececec' }}
+          // title={selectedElement ? `基本信息: ${selectedElement.type}` : "请选择节点或边"}
+          style={{ width: 350, backgroundColor: '#ececec' }}
         >
           {selectedElement ? (
             selectedElement.type === "node" ? (
               <div>
+                <h4>节点 - 基本信息</h4>
+                <p><strong>Name:</strong> {selectedElement.data.name || "N/A"}</p>
+                <p><strong>Project_description:</strong> {selectedElement.data.project_description || "N/A"}</p>
+                <p className="addr"><strong>Address:</strong> {selectedElement.data.address || "N/A"}</p>
+                <p><strong>Prices:</strong> {selectedElement.data.prices || "N/A"}</p>
+                <p><strong>Volume:</strong> {selectedElement.data.volume || "N/A"}</p>
+                <p><strong>latest_investment:</strong> {selectedElement.data.latest_investment || "N/A"}</p>
+                <hr />
                 <p><strong>ID:</strong> {selectedElement.data.id || "N/A"}</p>
                 <p><strong>Index:</strong> {selectedElement.data.index || "N/A"}</p>
                 <p><strong>Group:</strong> {selectedElement.data.group || "N/A"}</p>
               </div>
             ) : selectedElement.type === "link" ? (
               <div>
+                <h4>边 - 基本信息</h4>
                 <p><strong>Source:</strong> {selectedElement.data.source.id || "N/A"}</p>
                 <p><strong>Target:</strong> {selectedElement.data.target.id || "N/A"}</p>
                 <p><strong>Value:</strong> {selectedElement.data.value || "N/A"}</p>
+                <p className="addr"><strong>Transaction Hash:</strong> {selectedElement.data.transaction_hash || "N/A"}</p>
               </div>
             ) : null
           ) : (
-            <p>点击节点或边以查看详细信息</p>
+            <h3>点击节点或边以查看详细信息</h3>
           )}
         </Card>
       </div>
