@@ -92,7 +92,8 @@ function App() {
       .attr("r", 8)
       .attr("fill", (d) => groupColorMapping[d.group]) // 使用 groupColorMapping 根据 group 设置颜色
       .on("click", (event, d) => {
-        fetchData(d)
+        // fetchData(d)
+        nodeClick(d)
         setSelectedElement({ type: "node", data: d });
         // console.log("节点被点击:", d);
       })
@@ -162,37 +163,128 @@ function App() {
 
   /* ****************网络请求******************* */
   // 网络请求函数，放在组件内部
-  const apiKey = "sk-3cd428d768f64df68ab9422a23a4ec5c";  
-  const baseURL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+  const apiKey = import.meta.env.VITE_API_KEY;
+  const baseURL = import.meta.env.VITE_BASE_URL;
 
-  const fetchData = async (d) => {
-    try {
-      console.log('我是fetchData 我拿到了节点信息',d);
-      
-      // const response = await axios.get('https://api.example.com/data');
-      // setData(response.data);
-      const response = await axios.post(
-        baseURL,
-        {
-            model: "qwen-plus",  // 模型列表：https://help.aliyun.com/zh/model-studio/getting-started/models
-            messages: [
-                { role: "system", content: "You are a helpful assistant." },
-                { role: "user", content: '简短介绍一下bitcoin' }
-            ]
-        },
-        {
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${apiKey}`
-            }
-        }
-      )
-      console.log(response.data.choices[0].message.content);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+  const fetchData = async (d) => {  
+    if(d == 'AaveAAVE' || d == 'CardanoADA') {
+      console.log('fecth了');
+       try {
+        console.log('我是fetchData 我拿到了节点信息',d);
+        
+        // const response = await axios.get('https://api.example.com/data');
+        // setData(response.data);
+        const response = await axios.post(
+          baseURL,
+          {
+              model: "qwen-plus", 
+              messages: [
+                  { role: "system", content: "You are a helpful assistant." },
+                  { role: "user", content: '50字左右简短介绍一下'+d }
+              ]
+          },
+          {
+              headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${apiKey}`
+              }
+          }
+        )
+        // console.log(response.data.choices[0].message.content);
+        return response.data.choices[0].message.content
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     }
+    
+    // try {
+    //   console.log('我是fetchData 我拿到了节点信息',d);
+      
+    //   // const response = await axios.get('https://api.example.com/data');
+    //   // setData(response.data);
+    //   const response = await axios.post(
+    //     baseURL,
+    //     {
+    //         model: "qwen-plus", 
+    //         messages: [
+    //             { role: "system", content: "You are a helpful assistant." },
+    //             { role: "user", content: '简短介绍一下bitcoin' }
+    //         ]
+    //     },
+    //     {
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //             "Authorization": `Bearer ${apiKey}`
+    //         }
+    //     }
+    //   )
+    //   console.log(response.data.choices[0].message.content);
+    // } catch (error) {
+    //   console.error('Error fetching data:', error);
+    // }
   };
 
+  const nodeClick = async (node_detail) => {
+    // if(node_detail.name != 'AaveAAVE' || node_detail.name != 'CardanoADA') return
+    // console.log(node_detail.name);
+    const chatMessages = document.getElementById('chatMessages');
+  
+    // 第一条消息立即显示
+    const botMessageElement = document.createElement('div');
+    botMessageElement.className = 'message';
+    botMessageElement.textContent = `机器人: 正在为你查询节点【${node_detail.name}】...`;
+    chatMessages.appendChild(botMessageElement);
+    
+    // 滚动到最新消息
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // 第二条消息延时显示
+    if(node_detail.name == 'AaveAAVE' || node_detail.name == 'CardanoADA') {
+      console.log('hahaha');
+      let res = await fetchData(node_detail.name)
+      console.log(res);
+      const botSearch = document.createElement('div');
+      botSearch.className = 'message';
+      botSearch.textContent = `机器人: ${res}`;
+      chatMessages.appendChild(botSearch);
+  
+      // 滚动到最新消息
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    // setTimeout(() => {
+    //   const botSearch = document.createElement('div');
+    //   botSearch.className = 'message';
+    //   botSearch.textContent = `机器人: 节点【${node_detail.name}】的详细信息已找到！`;
+    //   chatMessages.appendChild(botSearch);
+  
+    //   // 滚动到最新消息
+    //   chatMessages.scrollTop = chatMessages.scrollHeight;
+    // }, 2000); // 2秒后显示第二条消息
+  };
+  
+
+  function handleSendMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value;
+    if (message) {
+      const chatMessages = document.getElementById('chatMessages');
+      // 用户消息
+      const userMessageElement = document.createElement('div');
+      userMessageElement.className = 'message';
+      userMessageElement.textContent = `用户: ${message}`;
+      chatMessages.appendChild(userMessageElement);
+      
+      // 机器人重复用户消息
+      const botMessageElement = document.createElement('div');
+      botMessageElement.className = 'message';
+      botMessageElement.textContent = `机器人: ${message}`;
+      chatMessages.appendChild(botMessageElement);
+
+      input.value = '';
+      // 滚动到最新消息
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  }
 
   return (
     <div id="container">
@@ -221,7 +313,7 @@ function App() {
         </div>
         <Card
           // title={selectedElement ? `基本信息: ${selectedElement.type}` : "请选择节点或边"}
-          style={{ width: 350, backgroundColor: '#ececec' }}
+          style={{ width: 385, backgroundColor: '#ececec' }}
         >
           {selectedElement ? (
             selectedElement.type === "node" ? (
@@ -251,6 +343,18 @@ function App() {
             <h3>点击节点或边以查看详细信息</h3>
           )}
         </Card>
+        <div className="chatbox">
+          {/* 聊天框组件插入到这里 */}
+          <div className="chat-window">
+            <div className="chat-messages" id="chatMessages">
+              {/* 消息记录会插入到这里 */}
+            </div>
+          </div>
+          <div className="chat-input">
+            <input type="text" id="chatInput" placeholder="请输入消息..." />
+            <button onClick={handleSendMessage} >发送</button>
+          </div>
+        </div>
       </div>
     </div>
   );
