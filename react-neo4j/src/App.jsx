@@ -180,7 +180,7 @@ function App() {
               model: "qwen-plus", 
               messages: [
                   { role: "system", content: "You are a helpful assistant." },
-                  { role: "user", content: '50字左右简短介绍一下'+d }
+                  { role: "user", content: '50字左右简短介绍一下'+d+',同时推测一下我可能会基于这个节点提什么问题' }
               ]
           },
           {

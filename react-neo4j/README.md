@@ -19,3 +19,7 @@ pnpm install d3 --save
 # 读取json方法
 json文件放到public才有效
 验证json格式 https://jsonlint.com/
+
+# 环境变量
+在把调用了大模型api的项目上传到GitHub时，意识到环境变量的重要性
+还有防抖节流
