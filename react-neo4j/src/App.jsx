@@ -127,6 +127,47 @@ function App() {
 
       node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
     });
+
+    // 定义每个组的文字描述
+    const groupDescriptions = {
+      1: "货币节点", // 代表某种数字货币
+      2: "项目节点", // 表示一个区块链项目
+      3: "新闻节点", // 涉及的相关新闻
+      4: "交易节点", // 表示资金转移或交易记录
+      5: "用户节点", // 代表个人或用户
+      6: "投资机构节点", // 显示相关投资机构
+      7: "合作伙伴节点", // 项目的合作方
+      8: "社区节点", // 表示参与者社区
+      9: "监管节点", // 相关政策和法规
+      10: "未知节点", // 暂未分类的数据
+    };
+    
+    // 创建图例
+    const legendData = Object.entries(groupColorMapping); // 从 groupColorMapping 提取颜色和类别
+    const legend = svg
+      .append("g")
+      .attr("transform", `translate(10, ${height - 250})`); // 图例位置，可调整
+
+    legendData.forEach(([group, color], index) => {
+      const legendItem = legend.append("g").attr("transform", `translate(0, ${index * 20})`);
+
+      // 矩形颜色块
+      legendItem
+        .append("rect")
+        .attr("width", 18)
+        .attr("height", 18)
+        .attr("fill", color);
+
+      // 对应文字
+      legendItem
+        .append("text")
+        .attr("x", 25) // 文本位置
+        .attr("y", 14) // 与矩形对齐
+        .attr("font-size", "14px")
+        .attr("fill", "#000")
+        .text(groupDescriptions[group] || "其他节点"); // 从 groupDescriptions 动态获取文字描述
+    });
+
   }, [filteredData, graphData]);
 
   const handleGroupChange = (value) => {
