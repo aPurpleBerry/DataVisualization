@@ -38,148 +38,16 @@ function App() {
       .catch((error) => console.error("Error loading JSON:", error));
   }, []);
 
-  // useEffect(() => {
-  //   if (!graphData || !filteredData) return;
-
-  //   const { nodes, links } = filteredData;
-
-  //   const width = 720, height = 600;
-
-  //   // 清空之前的内容（避免重复渲染）
-  //   d3.select(leftRef.current).selectAll("*").remove();
-
-  //   // 创建 SVG 容器
-  //   const svg = d3
-  //     .select(leftRef.current)
-  //     .append("svg")
-  //     .attr("width", width)
-  //     .attr("height", height)
-  //     .attr("viewBox", [0, 0, width, height])
-  //     .attr("style", "max-width: 100%; height: auto;");
-
-  //   // 创建力导向图
-  //   const simulation = d3
-  //     .forceSimulation(nodes)
-  //     .force(
-  //       "link",
-  //       d3.forceLink(links).id((d) => d.id)
-  //     )
-  //     .force("charge", d3.forceManyBody())
-  //     .force("center", d3.forceCenter(width / 2, height / 2));
-
-  //   // 绘制连线
-  //   const link = svg
-  //     .append("g")
-  //     .attr("stroke", "#999")
-  //     .attr("stroke-opacity", 0.6)
-  //     .selectAll("line")
-  //     .data(links)
-  //     .join("line")
-  //     .attr("stroke-width", (d) => Math.sqrt(d.value))
-  //     .on("click", (event, d) => {
-  //       setSelectedElement({ type: "link", data: d });
-  //       console.log("边被点击:", d);
-  //     });
-
-  //   // 绘制节点
-  //   const node = svg
-  //     .append("g")
-  //     .attr("stroke", "#fff")
-  //     .attr("stroke-width", 1.5)
-  //     .selectAll("circle")
-  //     .data(nodes)
-  //     .join("circle")
-  //     .attr("r", 8)
-  //     .attr("fill", (d) => groupColorMapping[d.group]) // 使用 groupColorMapping 根据 group 设置颜色
-  //     .on("click", (event, d) => {
-  //       // fetchData(d)
-  //       nodeClick(d)
-  //       setSelectedElement({ type: "node", data: d });
-  //       // console.log("节点被点击:", d);
-  //     })
-  //     .call(
-  //       d3
-  //         .drag()
-  //         .on("start", (event) => {
-  //           if (!event.active) simulation.alphaTarget(0.3).restart();
-  //           event.subject.fx = event.subject.x;
-  //           event.subject.fy = event.subject.y;
-  //         })
-  //         .on("drag", (event) => {
-  //           event.subject.fx = event.x;
-  //           event.subject.fy = event.y;
-  //         })
-  //         .on("end", (event) => {
-  //           if (!event.active) simulation.alphaTarget(0);
-  //           event.subject.fx = null;
-  //           event.subject.fy = null;
-  //         })
-  //     );
-
-  //   node.append("title").text((d) => d.id);
-
-  //   simulation.on("tick", () => {
-  //     link
-  //       .attr("x1", (d) => d.source.x)
-  //       .attr("y1", (d) => d.source.y)
-  //       .attr("x2", (d) => d.target.x)
-  //       .attr("y2", (d) => d.target.y);
-
-  //     node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-  //   });
-
-  //   // 定义每个组的文字描述
-  //   const groupDescriptions = {
-  //     1: "货币节点", // 代表某种数字货币
-  //     2: "项目节点", // 表示一个区块链项目
-  //     3: "新闻节点", // 涉及的相关新闻
-  //     4: "交易节点", // 表示资金转移或交易记录
-  //     5: "用户节点", // 代表个人或用户
-  //     6: "投资机构节点", // 显示相关投资机构
-  //     7: "合作伙伴节点", // 项目的合作方
-  //     8: "社区节点", // 表示参与者社区
-  //     9: "监管节点", // 相关政策和法规
-  //     10: "未知节点", // 暂未分类的数据
-  //   };
-    
-  //   // 创建图例
-  //   const legendData = Object.entries(groupColorMapping); // 从 groupColorMapping 提取颜色和类别
-  //   const legend = svg
-  //     .append("g")
-  //     .attr("transform", `translate(10, ${height - 250})`); // 图例位置，可调整
-
-  //   legendData.forEach(([group, color], index) => {
-  //     const legendItem = legend.append("g").attr("transform", `translate(0, ${index * 20})`);
-
-  //     // 矩形颜色块
-  //     legendItem
-  //       .append("rect")
-  //       .attr("width", 18)
-  //       .attr("height", 18)
-  //       .attr("fill", color);
-
-  //     // 对应文字
-  //     legendItem
-  //       .append("text")
-  //       .attr("x", 25) // 文本位置
-  //       .attr("y", 14) // 与矩形对齐
-  //       .attr("font-size", "14px")
-  //       .attr("fill", "#000")
-  //       .text(groupDescriptions[group] || "其他节点"); // 从 groupDescriptions 动态获取文字描述
-  //   });
-
-  // }, [filteredData, graphData]);
-
   useEffect(() => {
     if (!graphData || !filteredData) return;
-  
+
     const { nodes, links } = filteredData;
-  
+
     const width = 720, height = 600;
-  
+
     // 清空之前的内容（避免重复渲染）
     d3.select(leftRef.current).selectAll("*").remove();
-  
+
     // 创建 SVG 容器
     const svg = d3
       .select(leftRef.current)
@@ -188,19 +56,17 @@ function App() {
       .attr("height", height)
       .attr("viewBox", [0, 0, width, height])
       .attr("style", "max-width: 100%; height: auto;");
-  
+
     // 创建力导向图
     const simulation = d3
       .forceSimulation(nodes)
       .force(
         "link",
-        d3.forceLink(links)
-          .id((d) => d.id)
-          .distance(70) // 固定边长度为 200（可根据需要调整）
+        d3.forceLink(links).id((d) => d.id)
       )
       .force("charge", d3.forceManyBody())
       .force("center", d3.forceCenter(width / 2, height / 2));
-  
+
     // 绘制连线
     const link = svg
       .append("g")
@@ -214,66 +80,54 @@ function App() {
         setSelectedElement({ type: "link", data: d });
         console.log("边被点击:", d);
       });
-  
-    // 绘制节点分组，支持叠加圆形和图标
-    const nodeGroup = svg
-    .append("g")
-    .selectAll("g")
-    .data(nodes)
-    .join("g")
-    .attr("class", "node-group")
-    .on("click", (event, d) => {
-      nodeClick(d); // 保持你的原有点击逻辑
-      setSelectedElement({ type: "node", data: d });
-    })
-    .call(
-      d3
-        .drag()
-        .on("start", (event) => {
-          if (!event.active) simulation.alphaTarget(0.3).restart();
-          event.subject.fx = event.subject.x;
-          event.subject.fy = event.subject.y;
-        })
-        .on("drag", (event) => {
-          event.subject.fx = event.x;
-          event.subject.fy = event.y;
-        })
-        .on("end", (event) => {
-          if (!event.active) simulation.alphaTarget(0);
-          event.subject.fx = null;
-          event.subject.fy = null;
-        })
-    );
-  
-    // 绘制节点的背景圆
-    nodeGroup
-    .append("circle")
-    .attr("r", 16) // 修改为更大的半径以适应图标
-    .attr("fill", (d) => groupColorMapping[d.group]) // 使用 groupColorMapping 根据 group 设置颜色
-    .attr("stroke", "#fff")
-    .attr("stroke-width", 1.5);
-  
-    // 在节点圆中心叠加嵌入的 SVG 图标
-  nodeGroup
-  .append("foreignObject")
-  .attr("x", -12) // 图标位置居中，偏移一半宽度
-  .attr("y", -12) // 图标位置居中，偏移一半高度
-  .attr("width", 24) // 图标宽度
-  .attr("height", 24) // 图标高度
-  .html((d) => d.icon || ""); // 从节点数据的 icon 字段插入嵌入的 SVG
-  
-    nodeGroup.append("title").text((d) => d.id);
-  
+
+    // 绘制节点
+    const node = svg
+      .append("g")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5)
+      .selectAll("circle")
+      .data(nodes)
+      .join("circle")
+      .attr("r", 8)
+      .attr("fill", (d) => groupColorMapping[d.group]) // 使用 groupColorMapping 根据 group 设置颜色
+      .on("click", (event, d) => {
+        // fetchData(d)
+        nodeClick(d)
+        setSelectedElement({ type: "node", data: d });
+        // console.log("节点被点击:", d);
+      })
+      .call(
+        d3
+          .drag()
+          .on("start", (event) => {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x;
+            event.subject.fy = event.subject.y;
+          })
+          .on("drag", (event) => {
+            event.subject.fx = event.x;
+            event.subject.fy = event.y;
+          })
+          .on("end", (event) => {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null;
+            event.subject.fy = null;
+          })
+      );
+
+    node.append("title").text((d) => d.id);
+
     simulation.on("tick", () => {
       link
         .attr("x1", (d) => d.source.x)
         .attr("y1", (d) => d.source.y)
         .attr("x2", (d) => d.target.x)
         .attr("y2", (d) => d.target.y);
-  
-      nodeGroup.attr("transform", (d) => `translate(${d.x},${d.y})`);
+
+      node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
     });
-  
+
     // 定义每个组的文字描述
     const groupDescriptions = {
       1: "货币节点", // 代表某种数字货币
@@ -287,23 +141,23 @@ function App() {
       9: "监管节点", // 相关政策和法规
       10: "未知节点", // 暂未分类的数据
     };
-  
+    
     // 创建图例
     const legendData = Object.entries(groupColorMapping); // 从 groupColorMapping 提取颜色和类别
     const legend = svg
       .append("g")
       .attr("transform", `translate(10, ${height - 250})`); // 图例位置，可调整
-  
+
     legendData.forEach(([group, color], index) => {
       const legendItem = legend.append("g").attr("transform", `translate(0, ${index * 20})`);
-  
+
       // 矩形颜色块
       legendItem
         .append("rect")
         .attr("width", 18)
         .attr("height", 18)
         .attr("fill", color);
-  
+
       // 对应文字
       legendItem
         .append("text")
@@ -313,7 +167,151 @@ function App() {
         .attr("fill", "#000")
         .text(groupDescriptions[group] || "其他节点"); // 从 groupDescriptions 动态获取文字描述
     });
+
   }, [filteredData, graphData]);
+
+  // useEffect(() => {
+  //   if (!graphData || !filteredData) return;
+  
+  //   const { nodes, links } = filteredData;
+  
+  //   const width = 720, height = 600;
+  
+  //   // 清空之前的内容（避免重复渲染）
+  //   d3.select(leftRef.current).selectAll("*").remove();
+  
+  //   // 创建 SVG 容器
+  //   const svg = d3
+  //     .select(leftRef.current)
+  //     .append("svg")
+  //     .attr("width", width)
+  //     .attr("height", height)
+  //     .attr("viewBox", [0, 0, width, height])
+  //     .attr("style", "max-width: 100%; height: auto;");
+  
+  //   // 创建力导向图
+  //   const simulation = d3
+  //     .forceSimulation(nodes)
+  //     .force(
+  //       "link",
+  //       d3.forceLink(links).id((d) => d.id)
+  //     )
+  //     .force("charge", d3.forceManyBody())
+  //     .force("center", d3.forceCenter(width / 2, height / 2));
+  
+  //   // 绘制连线
+  //   const link = svg
+  //     .append("g")
+  //     .attr("stroke", "#999")
+  //     .attr("stroke-opacity", 0.6)
+  //     .selectAll("line")
+  //     .data(links)
+  //     .join("line")
+  //     .attr("stroke-width", (d) => Math.sqrt(d.value))
+  //     .on("click", (event, d) => {
+  //       setSelectedElement({ type: "link", data: d });
+  //       console.log("边被点击:", d);
+  //     });
+  
+  //   // 绘制节点分组，支持叠加圆形和图标
+  //   const nodeGroup = svg
+  //   .append("g")
+  //   .selectAll("g")
+  //   .data(nodes)
+  //   .join("g")
+  //   .attr("class", "node-group")
+  //   .on("click", (event, d) => {
+  //     nodeClick(d); // 保持你的原有点击逻辑
+  //     setSelectedElement({ type: "node", data: d });
+  //   })
+  //   .call(
+  //     d3
+  //       .drag()
+  //       .on("start", (event) => {
+  //         if (!event.active) simulation.alphaTarget(0.3).restart();
+  //         event.subject.fx = event.subject.x;
+  //         event.subject.fy = event.subject.y;
+  //       })
+  //       .on("drag", (event) => {
+  //         event.subject.fx = event.x;
+  //         event.subject.fy = event.y;
+  //       })
+  //       .on("end", (event) => {
+  //         if (!event.active) simulation.alphaTarget(0);
+  //         event.subject.fx = null;
+  //         event.subject.fy = null;
+  //       })
+  //   );
+  
+  //   // 绘制节点的背景圆
+  //   nodeGroup
+  //   .append("circle")
+  //   .attr("r", 20) // 修改为更大的半径以适应图标
+  //   .attr("fill", (d) => groupColorMapping[d.group]) // 使用 groupColorMapping 根据 group 设置颜色
+  //   .attr("stroke", "#fff")
+  //   .attr("stroke-width", 1.5);
+  
+  //   // 在节点圆中心叠加嵌入的 SVG 图标
+  // nodeGroup
+  // .append("foreignObject")
+  // .attr("x", -12) // 图标位置居中，偏移一半宽度
+  // .attr("y", -12) // 图标位置居中，偏移一半高度
+  // .attr("width", 24) // 图标宽度
+  // .attr("height", 24) // 图标高度
+  // .html((d) => d.icon || ""); // 从节点数据的 icon 字段插入嵌入的 SVG
+  
+  //   nodeGroup.append("title").text((d) => d.id);
+  
+  //   simulation.on("tick", () => {
+  //     link
+  //       .attr("x1", (d) => d.source.x)
+  //       .attr("y1", (d) => d.source.y)
+  //       .attr("x2", (d) => d.target.x)
+  //       .attr("y2", (d) => d.target.y);
+  
+  //     nodeGroup.attr("transform", (d) => `translate(${d.x},${d.y})`);
+  //   });
+  
+  //   // 定义每个组的文字描述
+  //   const groupDescriptions = {
+  //     1: "货币节点", // 代表某种数字货币
+  //     2: "项目节点", // 表示一个区块链项目
+  //     3: "新闻节点", // 涉及的相关新闻
+  //     4: "交易节点", // 表示资金转移或交易记录
+  //     5: "用户节点", // 代表个人或用户
+  //     6: "投资机构节点", // 显示相关投资机构
+  //     7: "合作伙伴节点", // 项目的合作方
+  //     8: "社区节点", // 表示参与者社区
+  //     9: "监管节点", // 相关政策和法规
+  //     10: "未知节点", // 暂未分类的数据
+  //   };
+  
+  //   // 创建图例
+  //   const legendData = Object.entries(groupColorMapping); // 从 groupColorMapping 提取颜色和类别
+  //   const legend = svg
+  //     .append("g")
+  //     .attr("transform", `translate(10, ${height - 250})`); // 图例位置，可调整
+  
+  //   legendData.forEach(([group, color], index) => {
+  //     const legendItem = legend.append("g").attr("transform", `translate(0, ${index * 20})`);
+  
+  //     // 矩形颜色块
+  //     legendItem
+  //       .append("rect")
+  //       .attr("width", 18)
+  //       .attr("height", 18)
+  //       .attr("fill", color);
+  
+  //     // 对应文字
+  //     legendItem
+  //       .append("text")
+  //       .attr("x", 25) // 文本位置
+  //       .attr("y", 14) // 与矩形对齐
+  //       .attr("font-size", "14px")
+  //       .attr("fill", "#000")
+  //       .text(groupDescriptions[group] || "其他节点"); // 从 groupDescriptions 动态获取文字描述
+  //   });
+  // }, [filteredData, graphData]);
   
 
   const handleGroupChange = (value) => {
