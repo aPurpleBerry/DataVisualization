@@ -78,3 +78,6 @@ json文件放到public才有效
 ## 问题3：
 svg中有很多双引号，和json文件的双引号重复了，所以我们要使用 转义符\，有什么工具能有自动在双引号前面加 \的
 https://www.freeformatter.com/json-escape.html#before-output
+
+# 路由
+pnpm install react-router-dom

@@ -1,0 +1,15 @@
+{
+"nodes":[
+  {"id":"11","group":1},
+  {"id":"22","group":2},
+  {"id":"33","group":3}
+],
+"links":[
+  {
+    "source":"11",
+    "target":"22",
+    "value":589,
+    "transaction_hash": "22"
+  }
+ ]
+}
