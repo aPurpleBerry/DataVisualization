@@ -321,47 +321,112 @@ function TxNode() {
     // }, 2000); // 2秒后显示第二条消息
   };
 
-  // 双击节点
+  // 双击节点-得到单步
+  // const handleNodeDoubleClick = (clickedNode) => {
+  //   if (!graphData) return;
+  
+  //   // 筛选与双击节点相关的边
+  //   const relatedLinks = graphData.links.filter(
+  //     (link) =>
+  //       (link.source.id || link.source) === clickedNode.id ||
+  //       (link.target.id || link.target) === clickedNode.id
+  //   );
+  
+  //   // 获取相关节点 ID
+  //   const relatedNodeIds = new Set(
+  //     relatedLinks.flatMap((link) => [
+  //       link.source.id || link.source,
+  //       link.target.id || link.target,
+  //     ])
+  //   );
+  
+  //   // 筛选相关节点
+  //   const relatedNodes = graphData.nodes.filter((node) =>
+  //     relatedNodeIds.has(node.id)
+  //   );
+  
+  //   // 如果相关数据为空，返回错误提示
+  //   if (relatedNodes.length === 0 || relatedLinks.length === 0) {
+  //     console.warn("未找到与该节点相关的数据:", clickedNode);
+  //     alert("该节点无相关子图！");
+  //     return;
+  //   }
+  
+  //   // 更新子图数据
+  //   setFilteredData({
+  //     nodes: relatedNodes,
+  //     links: relatedLinks,
+  //   });
+  
+  //   console.log("双击节点渲染子图:", clickedNode);
+  // };
+
   const handleNodeDoubleClick = (clickedNode) => {
     if (!graphData) return;
   
-    // 筛选与双击节点相关的边
-    const relatedLinks = graphData.links.filter(
-      (link) =>
-        (link.source.id || link.source) === clickedNode.id ||
-        (link.target.id || link.target) === clickedNode.id
-    );
+    // 调用提取两步子图的函数
+    const subgraph = extractTwoStepSubgraph(clickedNode, graphData);
   
-    // 获取相关节点 ID
-    const relatedNodeIds = new Set(
-      relatedLinks.flatMap((link) => [
-        link.source.id || link.source,
-        link.target.id || link.target,
-      ])
-    );
-  
-    // 筛选相关节点
-    const relatedNodes = graphData.nodes.filter((node) =>
-      relatedNodeIds.has(node.id)
-    );
-  
-    // 如果相关数据为空，返回错误提示
-    if (relatedNodes.length === 0 || relatedLinks.length === 0) {
+    // 检查子图数据是否为空
+    if (subgraph.nodes.length === 0 || subgraph.links.length === 0) {
       console.warn("未找到与该节点相关的数据:", clickedNode);
       alert("该节点无相关子图！");
       return;
     }
   
     // 更新子图数据
-    setFilteredData({
-      nodes: relatedNodes,
-      links: relatedLinks,
-    });
+    setFilteredData(subgraph);
   
-    console.log("双击节点渲染子图:", clickedNode);
+    console.log("双击节点渲染两步子图:", clickedNode, subgraph);
   };
   
 
+  // 两步函数 
+  const extractTwoStepSubgraph = (clickedNode, graphData) => {
+    if (!graphData) return { nodes: [], links: [] };
+  
+    const visitedNodes = new Set();
+    const relatedNodes = new Map();
+    const relatedLinks = new Set();
+  
+    const queue = [clickedNode.id];
+  
+    // BFS 两层深度
+    for (let step = 0; step < 2; step++) {
+      const currentLevel = [...queue];
+      queue.length = 0;
+  
+      currentLevel.forEach((nodeId) => {
+        if (visitedNodes.has(nodeId)) return;
+        visitedNodes.add(nodeId);
+  
+        const links = graphData.links.filter(
+          (link) =>
+            (link.source.id || link.source) === nodeId ||
+            (link.target.id || link.target) === nodeId
+        );
+  
+        links.forEach((link) => {
+          relatedLinks.add(link);
+  
+          const sourceId = link.source.id || link.source;
+          const targetId = link.target.id || link.target;
+  
+          if (!visitedNodes.has(sourceId)) queue.push(sourceId);
+          if (!visitedNodes.has(targetId)) queue.push(targetId);
+  
+          relatedNodes.set(sourceId, graphData.nodes.find((node) => node.id === sourceId));
+          relatedNodes.set(targetId, graphData.nodes.find((node) => node.id === targetId));
+        });
+      });
+    }
+  
+    return {
+      nodes: Array.from(relatedNodes.values()),
+      links: Array.from(relatedLinks),
+    };
+  };
+  
 
   function handleSendMessage() {
     const input = document.getElementById('chatInput');
