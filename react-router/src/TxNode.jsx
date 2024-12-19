@@ -1,10 +1,3 @@
-// function TxNode() {
-//   return (
-//     <>
-//       <h1>hahahahah</h1>
-//     </>
-//   );
-// }
 
 // export default TxNode;
 import { useEffect, useRef, useState } from "react";
@@ -104,7 +97,7 @@ function TxNode() {
         nodeClick(d); // 单击逻辑
         setSelectedElement({ type: "node", data: d });
         clickTimer = null; // 清空定时器
-      }, 300); // 300ms 是浏览器区分单击和双击的常见延迟
+      }, 200); // 300ms 是浏览器区分单击和双击的常见延迟
     })
     .on("dblclick", (event, d) => {
       // 清空单击定时器

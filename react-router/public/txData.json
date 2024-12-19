@@ -1,15 +1,45 @@
 {
 "nodes":[
-  {"id":"11","group":1},
-  {"id":"22","group":2},
-  {"id":"33","group":3}
+  {"id":"230425980","group":3,"time_step":1},
+  {"id":"5530458","group":3,"time_step":1},
+  {"id":"98374661","group":3,"time_step":1},
+  {"id":"232403360","group":3,"time_step":1},
+  {"id":"232017777","group":3,"time_step":1},
+  {"id":"232027347","group":2,"time_step":1},
+  {"id":"230577432","group":2,"time_step":1},
+  {"id":"231990430","group":1,"time_step":1}
+
 ],
 "links":[
   {
-    "source":"11",
-    "target":"22",
-    "value":589,
-    "transaction_hash": "22"
+    "source":"230425980",
+    "target":"5530458",
+    "value": 1
+  },
+  {
+    "source":"98374661",
+    "target":"230425980",
+    "value": 1
+  },
+  {
+    "source":"5530458",
+    "target":"232403360",
+    "value": 1
+  },
+  {
+    "source":"232017777",
+    "target":"98374661",
+    "value": 1
+  },
+  {
+    "source":"5530458",
+    "target":"232403360",
+    "value": 1
+  },
+  {
+    "source":"232027347",
+    "target":"230577432",
+    "value": 1
   }
  ]
 }
