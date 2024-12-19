@@ -1,13 +1,28 @@
 {
 "nodes":[
-  {"id":"230425980","group":3,"time_step":1},
-  {"id":"5530458","group":3,"time_step":1},
-  {"id":"98374661","group":3,"time_step":1},
-  {"id":"232403360","group":3,"time_step":1},
-  {"id":"232017777","group":3,"time_step":1},
-  {"id":"232027347","group":2,"time_step":1},
-  {"id":"230577432","group":2,"time_step":1},
-  {"id":"231990430","group":1,"time_step":1}
+  {"id":"230425980","group":3,"time_step":1,"in_BTC_mean":"0.24003068", "out_BTC_mean":"0.11996534", 
+  "in_BTC_total":"0.24003068","out_BTC_total":"0.23993068"},
+
+  {"id":"5530458","group":3,"time_step":1,"in_BTC_mean":"0.23766510000000002", "out_BTC_mean":"0.11878255", 
+  "in_BTC_total":"0.23766510000000002","out_BTC_total":"0.2375651"},
+
+  {"id":"98374661","group":3,"time_step":1,"in_BTC_mean":"0.47199637", "out_BTC_mean":"0.235948185", 
+  "in_BTC_total":"0.47199637","out_BTC_total":"0.47189637"},
+
+  {"id":"232403360","group":3,"time_step":1,"in_BTC_mean":"0.21481623", "out_BTC_mean":"0.107358115", 
+  "in_BTC_total":"0.21481623","out_BTC_total":"0.21471623"},
+
+  {"id":"232017777","group":3,"time_step":1,"in_BTC_mean":"0.107358115", "out_BTC_mean":"0.21481623",
+   "in_BTC_total":"0.2400306","out_BTC_total":"0.47199637"},
+
+  {"id":"232027347","group":2,"time_step":1,"in_BTC_mean":"0.107358115", "out_BTC_mean":"0.21481623",
+   "in_BTC_total":"0.2400306","out_BTC_total":"0.47199637"},
+
+  {"id":"230577432","group":2,"time_step":1,"in_BTC_mean":"0.107358115", "out_BTC_mean":"0.21481623",
+  "in_BTC_total":"0.2400306","out_BTC_total":"0.47199637"},
+
+  {"id":"231990430","group":1,"time_step":1,"in_BTC_mean":"0.107358115", "out_BTC_mean":"0.21481623",
+   "in_BTC_total":"0.2400306","out_BTC_total":"0.47199637"}
 
 ],
 "links":[

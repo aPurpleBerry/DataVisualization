@@ -1,0 +1,16 @@
+.controls {
+  display: flex;
+  width: 85%;
+  margin-bottom: 10px;
+}
+
+.infoDetails {
+  /* background-color: red; */
+  width: 80%;
+  margin-bottom: 10px;
+}
+
+.controls Input{
+  margin-right: 5px;
+}
+

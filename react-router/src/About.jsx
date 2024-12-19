@@ -1,327 +1,288 @@
-
-import { useEffect, useRef, useState } from "react";
+import  { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import { Card, Select, Button } from "antd";
-import "./App.css";
+import { Input,Button } from "antd";
+import "./About.css";
 import axios from "axios";
 
-const { Option } = Select;
+const About = () => {
+  const leftRef = useRef(); // 左侧容器引用
+  const [data, setData] = useState(null); // 原始数据
+  const [filteredData, setFilteredData] = useState(null); // 筛选后的数据
+  const [searchTag, setSearchTag] = useState(""); // 用户输入的 tag
 
-function About() {
-  const [selectedElement, setSelectedElement] = useState(null);
-  const [graphData, setGraphData] = useState(null);
-  const leftRef = useRef(null);
-  const [filteredData, setFilteredData] = useState(null);
-  const [selectedGroup, setSelectedGroup] = useState(null);
 
-  // 固定颜色映射 (每个 group 对应一个颜色)
-  const groupColorMapping = {
-    1: "#1f77b4", // group 1 - 蓝色
-    2: "#ff7f0e", // group 2 - 橙色
-    3: "#2ca02c", // group 3 - 绿色
-    4: "#d62728", // group 4 - 红色
-    5: "#9467bd", // group 5 - 紫色
-    6: "#8c564b", // group 6 - 棕色
-    7: "#e377c2", // group 7 - 粉色
-    8: "#7f7f7f", // group 8 - 灰色
-    9: "#bcbd22", // group 9 - 黄绿色
-    10: "#17becf", // group 10 - 青色
-  };
+  const [selectedInfo, setSelectedInfo] = useState(null); // 存储选中节点或边的信息
 
-  // 加载 JSON 数据
+
   useEffect(() => {
-    fetch("./nodeData.json")
+    // 加载 JSON 数据
+    fetch("./project_graph.json")
       .then((response) => response.json())
-      .then((data) => {
-        setGraphData(data);
-        setFilteredData(data); // 初始显示完整图
+      .then((jsonData) => {
+        setData(jsonData); // 设置数据状态
+        setFilteredData(jsonData); // 初始显示完整数据
       })
       .catch((error) => console.error("Error loading JSON:", error));
   }, []);
 
   useEffect(() => {
-    if (!graphData || !filteredData) return;
-  
-    const { nodes, links } = filteredData;
-  
-    const width = 720, height = 600;
-  
-    // 清空之前的内容（避免重复渲染）
-    d3.select(leftRef.current).selectAll("*").remove();
-  
-    // 创建 SVG 容器
-    const svg = d3
-      .select(leftRef.current)
+    if (!filteredData || !leftRef.current) return;
+
+    const width = 800;
+    const height = 600;
+
+    const container = d3.select(leftRef.current);
+    container.selectAll("*").remove(); // 清空之前的内容
+
+    const svg = container
       .append("svg")
       .attr("width", width)
-      .attr("height", height)
-      .attr("viewBox", [0, 0, width, height])
-      .attr("style", "max-width: 100%; height: auto;");
-  
-    // 创建力导向图
+      .attr("height", height);
+
+    // 创建力导向布局
     const simulation = d3
-      .forceSimulation(nodes)
+      .forceSimulation(filteredData.nodes)
       .force(
         "link",
-        d3.forceLink(links)
+        d3
+          .forceLink(filteredData.link)
           .id((d) => d.id)
-          .distance(70) // 固定边长度为 200（可根据需要调整）
+          .distance(70)
       )
-      .force("charge", d3.forceManyBody())
+      .force("charge", d3.forceManyBody().strength(-30)) // 节点的排斥力
       .force("center", d3.forceCenter(width / 2, height / 2));
-  
+
     // 绘制连线
     const link = svg
       .append("g")
-      .attr("stroke", "#999")
-      .attr("stroke-opacity", 0.6)
       .selectAll("line")
-      .data(links)
-      .join("line")
-      .attr("stroke-width", (d) => Math.sqrt(d.value))
+      .data(filteredData.link)
+      .enter()
+      .append("line")
+      .attr("stroke", "#aaa")
+      .attr("stroke-width", 2)
       .on("click", (event, d) => {
-        setSelectedElement({ type: "link", data: d });
-        console.log("边被点击:", d);
+        // setSelectedInfo({ type: "link", data: d }); // 设置选中边的信息
+        // 提取 source 和 target 的 id
+        const sourceId = typeof d.source === "object" ? d.source.id : d.source;
+        const targetId = typeof d.target === "object" ? d.target.id : d.target;
+
+        setSelectedInfo({
+          type: "link",
+          data: { ...d, source: sourceId, target: targetId },
+        });
       });
-  
-    // 绘制节点分组，支持叠加圆形和图标
-    const nodeGroup = svg
-    .append("g")
-    .selectAll("g")
-    .data(nodes)
-    .join("g")
-    .attr("class", "node-group")
-    .on("click", (event, d) => {
-      nodeClick(d); // 保持你的原有点击逻辑
-      setSelectedElement({ type: "node", data: d });
-    })
-    .call(
-      d3
-        .drag()
-        .on("start", (event) => {
-          if (!event.active) simulation.alphaTarget(0.3).restart();
-          event.subject.fx = event.subject.x;
-          event.subject.fy = event.subject.y;
-        })
-        .on("drag", (event) => {
-          event.subject.fx = event.x;
-          event.subject.fy = event.y;
-        })
-        .on("end", (event) => {
-          if (!event.active) simulation.alphaTarget(0);
-          event.subject.fx = null;
-          event.subject.fy = null;
-        })
-    );
-  
-    // 绘制节点的背景圆
-    nodeGroup
-    .append("circle")
-    .attr("r", 16) // 修改为更大的半径以适应图标
-    .attr("fill", (d) => groupColorMapping[d.group]) // 使用 groupColorMapping 根据 group 设置颜色
-    .attr("stroke", "#fff")
-    .attr("stroke-width", 1.5);
-  
-    // 在节点圆中心叠加嵌入的 SVG 图标
-  nodeGroup
-  .append("foreignObject")
-  .attr("x", -12) // 图标位置居中，偏移一半宽度
-  .attr("y", -12) // 图标位置居中，偏移一半高度
-  .attr("width", 24) // 图标宽度
-  .attr("height", 24) // 图标高度
-  .html((d) => d.icon || ""); // 从节点数据的 icon 字段插入嵌入的 SVG
-  
-    nodeGroup.append("title").text((d) => d.id);
-  
+
+    // 绘制节点
+    const node = svg
+      .append("g")
+      .selectAll("circle")
+      .data(filteredData.nodes)
+      .enter()
+      .append("circle")
+      .attr("r", 20)
+      .attr("fill", (d) =>
+        d.Tag.includes("Digital Currency") ? "#69b3a2" : "#ff6347"
+      )
+      .on("click", (event, d) => {
+        nodeClick(d);
+        setSelectedInfo({ type: "node", data: d }); // 设置选中节点的信息
+      })
+      .call(drag(simulation));
+
+    // 添加节点标签
+    const label = svg
+      .append("g")
+      .selectAll("text")
+      .data(filteredData.nodes)
+      .enter()
+      .append("text")
+      .text((d) => d.Name)
+      .attr("x", 6)
+      .attr("y", 3)
+      .attr("font-size", "12px");
+
+    // 更新位置
     simulation.on("tick", () => {
       link
         .attr("x1", (d) => d.source.x)
         .attr("y1", (d) => d.source.y)
         .attr("x2", (d) => d.target.x)
         .attr("y2", (d) => d.target.y);
-  
-      nodeGroup.attr("transform", (d) => `translate(${d.x},${d.y})`);
+
+      node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+
+      label.attr("x", (d) => d.x + 10).attr("y", (d) => d.y + 3);
     });
-  
-    // 定义每个组的文字描述
-    const groupDescriptions = {
-      1: "货币节点", // 代表某种数字货币
-      2: "项目节点", // 表示一个区块链项目
-      3: "新闻节点", // 涉及的相关新闻
-      4: "交易节点", // 表示资金转移或交易记录
-      5: "用户节点", // 代表个人或用户
-      6: "投资机构节点", // 显示相关投资机构
-      7: "合作伙伴节点", // 项目的合作方
-      8: "社区节点", // 表示参与者社区
-      9: "监管节点", // 相关政策和法规
-      10: "未知节点", // 暂未分类的数据
-    };
-  
-    // 创建图例
-    const legendData = Object.entries(groupColorMapping); // 从 groupColorMapping 提取颜色和类别
-    const legend = svg
-      .append("g")
-      .attr("transform", `translate(10, ${height - 250})`); // 图例位置，可调整
-  
-    legendData.forEach(([group, color], index) => {
-      const legendItem = legend.append("g").attr("transform", `translate(0, ${index * 20})`);
-  
-      // 矩形颜色块
-      legendItem
-        .append("rect")
-        .attr("width", 18)
-        .attr("height", 18)
-        .attr("fill", color);
-  
-      // 对应文字
-      legendItem
-        .append("text")
-        .attr("x", 25) // 文本位置
-        .attr("y", 14) // 与矩形对齐
-        .attr("font-size", "14px")
-        .attr("fill", "#000")
-        .text(groupDescriptions[group] || "其他节点"); // 从 groupDescriptions 动态获取文字描述
-    });
-  }, [filteredData, graphData]);
-  
 
-  const handleGroupChange = (value) => {
-    setSelectedGroup(value); // 设置当前选中的类别
-  };
-
-  const handleRenderSubgraph = () => {
-    if (!selectedGroup || !graphData) return;
-
-    // 筛选出当前类别的节点
-    const filteredNodes = graphData.nodes.filter((node) => node.group === selectedGroup);
-    const filteredNodeIds = new Set(filteredNodes.map((node) => node.id));
-
-    // 修复 link 的 source 和 target 引用问题
-    const filteredLinks = graphData.links
-      .filter(
-        (link) =>
-          filteredNodeIds.has(typeof link.source === "object" ? link.source.id : link.source) &&
-          filteredNodeIds.has(typeof link.target === "object" ? link.target.id : link.target)
-      )
-      .map((link) => ({
-        ...link,
-        source: typeof link.source === "object" ? link.source.id : link.source,
-        target: typeof link.target === "object" ? link.target.id : link.target,
-      }));
-
-    // 设置筛选后的数据
-    setFilteredData({ nodes: filteredNodes, links: filteredLinks });
-  };
-
-  const handleResetGraph = () => {
-    setFilteredData(graphData);
-  };
-
-  /* ****************网络请求******************* */
-  // 网络请求函数，放在组件内部
-  const apiKey = import.meta.env.VITE_API_KEY;
-  const baseURL = import.meta.env.VITE_BASE_URL;
-
-  const fetchData = async (d) => {  
-    if(d == 'AaveAAVE' || d == 'CardanoADA') {
-      console.log('fecth了');
-       try {
-        console.log('我是fetchData 我拿到了节点信息',d);
-        
-        // const response = await axios.get('https://api.example.com/data');
-        // setData(response.data);
-        const response = await axios.post(
-          baseURL,
-          {
-              model: "qwen-plus", 
-              messages: [
-                  { role: "system", content: "You are a helpful assistant." },
-                  { role: "user", content: '50字左右简短介绍一下'+d+',同时推测一下我可能会基于这个节点提什么问题' }
-              ]
-          },
-          {
-              headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${apiKey}`
-              }
-          }
-        )
-        // console.log(response.data.choices[0].message.content);
-        return response.data.choices[0].message.content
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    }
     
-    // try {
-    //   console.log('我是fetchData 我拿到了节点信息',d);
-      
-    //   // const response = await axios.get('https://api.example.com/data');
-    //   // setData(response.data);
-    //   const response = await axios.post(
-    //     baseURL,
-    //     {
-    //         model: "qwen-plus", 
-    //         messages: [
-    //             { role: "system", content: "You are a helpful assistant." },
-    //             { role: "user", content: '简短介绍一下bitcoin' }
-    //         ]
-    //     },
-    //     {
-    //         headers: {
-    //             "Content-Type": "application/json",
-    //             "Authorization": `Bearer ${apiKey}`
-    //         }
-    //     }
-    //   )
-    //   console.log(response.data.choices[0].message.content);
-    // } catch (error) {
-    //   console.error('Error fetching data:', error);
-    // }
+
+    // 拖拽行为
+    function drag(simulation) {
+      function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+
+      function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+      }
+
+      function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+
+      return d3
+        .drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+    }
+  }, [filteredData]);
+
+  // 搜索函数
+  const handleSearch = () => {
+    if (!data || !searchTag.trim()) {
+      setFilteredData(data);
+      return;
+    }
+  
+    const tag = searchTag.trim().toLowerCase(); // 转换为小写
+    const filteredNodes = data.nodes.filter((node) =>
+      node.Tag.split("、").some((t) => t.toLowerCase() === tag) // 分割并比较小写
+    );
+  
+    const nodeIds = new Set(filteredNodes.map((node) => node.id));
+    const filteredLinks = data.link.filter(
+      (link) => nodeIds.has(link.source) && nodeIds.has(link.target)
+    );
+  
+    setFilteredData({ nodes: filteredNodes, link: filteredLinks });
   };
 
-  const nodeClick = async (node_detail) => {
-    // if(node_detail.name != 'AaveAAVE' || node_detail.name != 'CardanoADA') return
-    // console.log(node_detail.name);
+  const resetGraph = () => {
+    setFilteredData(data); // 恢复初始数据
+    setSearchTag(""); // 清空搜索框内容
+  };
+  
+ /* *********************************************网络请求************************************ */
+  const apiKey = import.meta.env.VITE_API_KEY; 
+  const baseURL = import.meta.env.VITE_BASE_URL;
+  const fetchData = async (nodeName) => {
+    try {
+      const response = await axios.post(
+        baseURL,
+        {
+          model: "qwen-plus", 
+          messages: [
+            { role: "system", content: "You are a helpful assistant." },
+            { role: "user", content: `50字左右简短介绍一下${nodeName},并提供两个基于该节点信息的推荐问题,
+                                    注意返回数据格式为：{ nodeInfo: "节点介绍", recommendations: ["推荐问题1", "推荐问题2"] }` }
+          ]
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+          }
+        }
+      );
+      console.log('我是response:' ,response);
+      console.log('我是response:' ,response.data.choices[0].message.content);
+      console.log('我是response:' ,typeof response.data.choices[0].message.content);
+      // const parsedData = JSON.parse(response.data.choices[0].message.content); // 转为对象 当且仅当返回值是对象有用
+
+      
+      // 假设返回数据格式为：{ nodeInfo: "节点介绍", recommendations: ["推荐问题1", "推荐问题2"] }
+      // 返回数据处理
+      const responseString = response.data.choices[0].message.content;
+      // 尝试解析为 JSON 对象
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseString);
+      } catch (error) {
+        console.warn("JSON.parse 解析失败，尝试使用正则解析:", error);
+
+        // 使用正则提取 nodeInfo 和 recommendations
+        const nodeInfoMatch = responseString.match(/nodeInfo:\s*"(.*?)"/);
+        const recommendationsMatch = responseString.match(/recommendations:\s*\[([^\]]+)\]/);
+
+        parsedData = {
+          nodeInfo: nodeInfoMatch ? nodeInfoMatch[1] : "未能提取到节点信息",
+          recommendations: recommendationsMatch
+            ? recommendationsMatch[1].split(",").map(item => item.trim().replace(/(^"|"$)/g, ""))
+            : []
+        };
+      }
+
+      // 提取字段
+      const { nodeInfo, recommendations } = parsedData;
+      return { nodeInfo, recommendations };
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      return {
+        nodeInfo: '查询失败，请稍后再试。',
+        recommendations: []
+      };
+    }
+  };
+
+  const nodeClick = async (nodeDetail) => {
     const chatMessages = document.getElementById('chatMessages');
   
-    // 第一条消息立即显示
-    const botMessageElement = document.createElement('div');
-    botMessageElement.className = 'message';
-    botMessageElement.textContent = `机器人: 正在为你查询节点【${node_detail.name}】...`;
-    chatMessages.appendChild(botMessageElement);
+    // 显示查询提示信息
+    const loadingMessage = document.createElement('div');
+    loadingMessage.className = 'message';
+    loadingMessage.textContent = `机器人: 正在为你查询节点【${nodeDetail. Name}】的信息，请稍后...`;
+    chatMessages.appendChild(loadingMessage);
+    scrollToBottom();
+  
+    console.log(nodeDetail.Name);
+    // 查询节点数据
     
-    // 滚动到最新消息
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    const { nodeInfo, recommendations } = await fetchData(nodeDetail.Name);
 
-    // 第二条消息延时显示
-    if(node_detail.name == 'AaveAAVE' || node_detail.name == 'CardanoADA') {
-      console.log('hahaha');
-      let res = await fetchData(node_detail.name)
-      console.log(res);
-      const botSearch = document.createElement('div');
-      botSearch.className = 'message';
-      botSearch.textContent = `机器人: ${res}`;
-      chatMessages.appendChild(botSearch);
-  
-      // 滚动到最新消息
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+    // 显示节点详细信息
+    const nodeInfoMessage = document.createElement('div');
+    nodeInfoMessage.className = 'message';
+    nodeInfoMessage.textContent = `机器人: ${nodeInfo}`;
+    chatMessages.appendChild(nodeInfoMessage);
+    scrollToBottom();
+
+    // 显示推荐问题1
+    // 使用定时器延迟显示推荐问题
+    if (recommendations.length > 0) {
+      setTimeout(() => {
+        const question1Message = document.createElement('div');
+        question1Message.className = 'message';
+        question1Message.textContent = `你或许想问: ${recommendations[0]}`;
+        chatMessages.appendChild(question1Message);
+        scrollToBottom();
+      }, 1000); // 延迟 1 秒
     }
-    // setTimeout(() => {
-    //   const botSearch = document.createElement('div');
-    //   botSearch.className = 'message';
-    //   botSearch.textContent = `机器人: 节点【${node_detail.name}】的详细信息已找到！`;
-    //   chatMessages.appendChild(botSearch);
-  
-    //   // 滚动到最新消息
-    //   chatMessages.scrollTop = chatMessages.scrollHeight;
-    // }, 2000); // 2秒后显示第二条消息
+
+    // 显示推荐问题2
+    if (recommendations.length > 1) {
+      setTimeout(() => {
+        const question2Message = document.createElement('div');
+        question2Message.className = 'message';
+        question2Message.textContent = `你或许想问: ${recommendations[1]}`;
+        chatMessages.appendChild(question2Message);
+        scrollToBottom();
+      }, 2000); // 延迟 2 秒
+    }
+    
   };
   
-
+  let message = ''
   function handleSendMessage() {
     const input = document.getElementById('chatInput');
-    const message = input.value;
+    message = input.value.trim();
     if (message) {
       const chatMessages = document.getElementById('chatMessages');
       // 用户消息
@@ -342,63 +303,72 @@ function About() {
     }
   }
 
+  // 无效
+  const chatMessagesRef = useRef(null);
+  const scrollToBottom = () => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  };
+  useEffect(() => {
+    scrollToBottom();
+  }, [message]); // 每当 messages 更新时滚动到底部
+
   return (
     <div id="container">
       <div className="left" ref={leftRef}>
         {/* D3 图表会被插入到这里 */}
       </div>
       <div className="right">
-        <div className="subgraphselect">
-          <Select
-            placeholder="选择节点类别"
-            onChange={handleGroupChange}
-            style={{ width: 200 }}
-          >
-            {[...Array(10).keys()].map((group) => (
-              <Option key={group + 1} value={group + 1}>
-                类别 {group + 1}
-              </Option>
-            ))}
-          </Select>
-          <Button type="primary" onClick={handleRenderSubgraph}>
-            渲染子图
-          </Button>
-          <Button type="default" onClick={handleResetGraph}>
-            显示所有
-          </Button>
-        </div>
-        <Card
-          // title={selectedElement ? `基本信息: ${selectedElement.type}` : "请选择节点或边"}
-          style={{ width: 385, backgroundColor: '#ececec' }}
-        >
-          {selectedElement ? (
-            selectedElement.type === "node" ? (
+        {/* 可扩展：其他内容 */}
+        <div className="infoDetails">
+          <h3>详情信息</h3>
+          {selectedInfo ? (
+            selectedInfo.type === "node" ? (
               <div>
-                <h4>节点 - 基本信息</h4>
-                <p><strong>Name:</strong> {selectedElement.data.name || "N/A"}</p>
-                <p><strong>Project_description:</strong> {selectedElement.data.project_description || "N/A"}</p>
-                <p className="addr"><strong>Address:</strong> {selectedElement.data.address || "N/A"}</p>
-                <p><strong>Prices:</strong> {selectedElement.data.prices || "N/A"}</p>
-                <p><strong>Volume:</strong> {selectedElement.data.volume || "N/A"}</p>
-                <p><strong>latest_investment:</strong> {selectedElement.data.latest_investment || "N/A"}</p>
-                <hr />
-                <p><strong>ID:</strong> {selectedElement.data.id || "N/A"}</p>
-                <p><strong>Index:</strong> {selectedElement.data.index || "N/A"}</p>
-                <p><strong>Group:</strong> {selectedElement.data.group || "N/A"}</p>
+                <h5>节点信息</h5>
+                <p><strong>ID:</strong> {selectedInfo.data.id}</p>
+                <p><strong>Name:</strong> {selectedInfo.data.Name}</p>
+                <p><strong>Tag:</strong> {selectedInfo.data.Tag}</p>
+                <p><strong>Description:</strong> {selectedInfo.data.Description}</p>
+                <p><strong>Price:</strong> {selectedInfo.data.Price}</p>
+                <p><strong>Hyperlink:</strong>{selectedInfo.data.Hyperlink}</p>
+                <p><strong>Price:</strong> {selectedInfo.data.Price}</p>
+                <p>
+                  <strong>Similar Projects:</strong>{" "}
+                  {selectedInfo.data["Similar Projects"]
+                    ? selectedInfo.data["Similar Projects"].replace(/#/g, "") // 去掉所有的 #
+                    : "N/A"}
+                </p>
+
+                <p><strong>Price:</strong> {selectedInfo.data.Price}</p>
               </div>
-            ) : selectedElement.type === "link" ? (
+            ) : (
               <div>
-                <h4>边 - 基本信息</h4>
-                <p><strong>Source:</strong> {selectedElement.data.source.id || "N/A"}</p>
-                <p><strong>Target:</strong> {selectedElement.data.target.id || "N/A"}</p>
-                <p><strong>Value:</strong> {selectedElement.data.value || "N/A"}</p>
-                <p className="addr"><strong>Transaction Hash:</strong> {selectedElement.data.transaction_hash || "N/A"}</p>
+                <h5>边信息</h5>
+                <p><strong>Source:</strong> {selectedInfo.data.source}</p>
+                <p><strong>Target:</strong> {selectedInfo.data.target}</p>
+                <p><strong>Relationship:</strong> {selectedInfo.data.relationship}</p>
               </div>
-            ) : null
+            )
           ) : (
-            <h3>点击节点或边以查看详细信息</h3>
+            <p>点击节点或边查看详细信息</p>
           )}
-        </Card>
+          
+        </div>
+
+        {/* tag分类 */}
+        <div className="controls" >
+          <Input
+            type="text"
+            placeholder="输入Tag (例如 POW) 获取子图"
+            value={searchTag}
+            onChange={(e) => setSearchTag(e.target.value)}
+          />
+          <Button onClick={handleSearch}>搜索</Button>
+          <Button onClick={resetGraph} style={{ marginLeft: "5px" }}>重置图</Button>
+        </div>
+
         <div className="chatbox">
           {/* 聊天框组件插入到这里 */}
           <div className="chat-window">
@@ -414,7 +384,6 @@ function About() {
       </div>
     </div>
   );
-}
+};
 
 export default About;
-

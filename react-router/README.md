@@ -46,3 +46,15 @@ const handleResetGraph = () => {
 ```
 
 mouseup失效
+
+# 字符串提取
+分离
+```
+{
+  "nodeInfo": "Bitcoin (BTC) 是一种去中心化的数字货币，使用区块链技术确保安全透明的交易记录，无需中介机构。",
+  "recommendations": [
+    "比特币的工作原理是什么？",
+    "如何开始使用比特币进行交易？"
+  ]
+}
+```

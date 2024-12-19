@@ -1,9 +1,13 @@
-
+// TODO
+// 用户自定义子图步数
+// 有向图
+ 
 // export default TxNode;
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Card, Select, Button } from "antd";
 import "./App.css";
+import "./TxNode.css";
 import axios from "axios";
 
 const { Option } = Select;
@@ -51,7 +55,7 @@ function TxNode() {
       .attr("height", height)
       .attr("viewBox", [0, 0, width, height])
       .attr("style", "max-width: 100%; height: auto;");
-  
+
     // 创建力导向图
     const simulation = d3
       .forceSimulation(nodes)
@@ -73,6 +77,7 @@ function TxNode() {
       .data(links)
       .join("line")
       .attr("stroke-width", (d) => Math.sqrt(d.value))
+      
       .on("click", (event, d) => {
         setSelectedElement({ type: "link", data: d });
         console.log("边被点击:", d);
@@ -361,6 +366,7 @@ function TxNode() {
   //   console.log("双击节点渲染子图:", clickedNode);
   // };
 
+  /*******************************两步函数***************************************/
   const handleNodeDoubleClick = (clickedNode) => {
     if (!graphData) return;
   
@@ -450,6 +456,7 @@ function TxNode() {
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
   }
+  
 
   return (
     <div id="container">
@@ -457,7 +464,32 @@ function TxNode() {
         {/* D3 图表会被插入到这里 */}
       </div>
       <div className="right">
-        <div className="subgraphselect">
+        {/* <div className="subGraphStep">
+          <Input placeholder="双击选择节点的子图，默认步数2"></Input>
+          <Button type="primary" onClick={() => setSteps(steps || 2)}>
+            设置子图步数
+          </Button>
+        </div> */}
+        <div className="subgraphselect"> 
+          <Select
+            placeholder="选择节点类别"
+            onChange={handleGroupChange}
+            style={{ width: 200 }}
+          >
+            {Object.entries(groupColorMapping).map(([group, color]) => (
+              <Option key={group} value={parseInt(group, 10)}>
+                <span style={{ color: color }}>类别 {group}</span>
+              </Option>
+            ))}
+          </Select>
+          <Button type="primary" onClick={handleRenderSubgraph}>
+            渲染子图
+          </Button>
+          <Button type="default" onClick={handleResetGraph}>
+            显示所有
+          </Button>
+        </div>
+        {/* <div className="subgraphselect">
           <Select
             placeholder="选择节点类别"
             onChange={handleGroupChange}
@@ -475,7 +507,7 @@ function TxNode() {
           <Button type="default" onClick={handleResetGraph}>
             显示所有
           </Button>
-        </div>
+        </div> */}
         <Card
           // title={selectedElement ? `基本信息: ${selectedElement.type}` : "请选择节点或边"}
           style={{ width: 385, backgroundColor: '#ececec' }}
@@ -483,17 +515,12 @@ function TxNode() {
           {selectedElement ? (
             selectedElement.type === "node" ? (
               <div>
-                <h4>节点 - 基本信息</h4>
-                <p><strong>Name:</strong> {selectedElement.data.name || "N/A"}</p>
-                <p><strong>Project_description:</strong> {selectedElement.data.project_description || "N/A"}</p>
-                <p className="addr"><strong>Address:</strong> {selectedElement.data.address || "N/A"}</p>
-                <p><strong>Prices:</strong> {selectedElement.data.prices || "N/A"}</p>
-                <p><strong>Volume:</strong> {selectedElement.data.volume || "N/A"}</p>
-                <p><strong>latest_investment:</strong> {selectedElement.data.latest_investment || "N/A"}</p>
-                <hr />
-                <p><strong>ID:</strong> {selectedElement.data.id || "N/A"}</p>
-                <p><strong>Index:</strong> {selectedElement.data.index || "N/A"}</p>
-                <p><strong>Group:</strong> {selectedElement.data.group || "N/A"}</p>
+                <h4>TX节点 - 基本信息</h4>
+                <p><strong>交易的唯一标识符 tx_id:</strong> {selectedElement.data.id || "N/A"}</p>
+                <p><strong>本交易的输入比特币金额的平均值 in_BTC_mean:</strong> {selectedElement.data.in_BTC_mean || "N/A"}</p>
+                <p><strong>本交易的输入比特币金额总和 in_BTC_total:</strong> {selectedElement.data.in_BTC_total || "N/A"}</p>
+                <p><strong>本交易的输出比特币金额的平均值 out_BTC_mean:</strong> {selectedElement.data.out_BTC_mean || "N/A"}</p>
+                <p><strong>本交易的输出比特币金额总和 out_BTC_total:</strong> {selectedElement.data.out_BTC_total || "N/A"}</p>
               </div>
             ) : selectedElement.type === "link" ? (
               <div>

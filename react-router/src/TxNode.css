@@ -1,0 +1,7 @@
+.subGraphStep {
+  width: 90%;
+  height: 30px;
+  margin-bottom: 20px;
+  display: flex;
+  /* padding: 20px; */
+}
