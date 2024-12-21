@@ -157,9 +157,14 @@ const About = () => {
     );
   
     const nodeIds = new Set(filteredNodes.map((node) => node.id));
+    // const filteredLinks = data.link.filter(
+    //   (link) => nodeIds.has(link.source) && nodeIds.has(link.target)
+    // ); 这段注释掉的代码会导致 边的连接丢失问题
     const filteredLinks = data.link.filter(
-      (link) => nodeIds.has(link.source) && nodeIds.has(link.target)
+      (link) => nodeIds.has(typeof link.source === "object" ? link.source.id : link.source) &&
+                nodeIds.has(typeof link.target === "object" ? link.target.id : link.target)
     );
+    
   
     setFilteredData({ nodes: filteredNodes, link: filteredLinks });
   };
